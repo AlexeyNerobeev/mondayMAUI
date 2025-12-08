@@ -18,6 +18,14 @@ namespace MauiApp4.ViewModel
         [ObservableProperty]
         private NContact _selectedContact;
 
+        public ContactsViewModel()
+         {
+            Contacts.Add(new NContact("Иванов иван иванович", "+7 549 463 85 12", "ivanov@gmail.com"));
+            Contacts.Add(new NContact("Петров Сергей иванович", "+7 549 123 12 85", "petrov@gmail.com"));
+            Contacts.Add(new NContact("Федоров максим Анатольевич", "+7 549 643 12 75", "fedorov@gmail.com"));
+            Contacts.Add(new NContact("Боженов Даниил Петрович", "+7 549 346 12 54", "bojenov@gmail.com"));
+        }
+
 
         [RelayCommand]
         private void Update()

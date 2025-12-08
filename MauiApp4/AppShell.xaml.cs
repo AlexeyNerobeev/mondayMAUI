@@ -2,6 +2,7 @@
 {
     public partial class AppShell : Shell
     {
+        AppTheme _currentTheme = Application.Current.UserAppTheme;
         public AppShell()
         {
             InitializeComponent();
@@ -9,11 +10,16 @@
 
         private void Switch_Toggled(object sender, ToggledEventArgs e)
         {
-            if (Application.Current.UserAppTheme == AppTheme.Light)
-                Application.Current.UserAppTheme = AppTheme.Dark;
-
-            else
+            if (_currentTheme == AppTheme.Dark)
+            {
                 Application.Current.UserAppTheme = AppTheme.Light;
+                _currentTheme = AppTheme.Light;
+            }
+            else
+            {
+                Application.Current.UserAppTheme = AppTheme.Dark;
+                _currentTheme = AppTheme.Dark;
+            }
         }
     }
 }

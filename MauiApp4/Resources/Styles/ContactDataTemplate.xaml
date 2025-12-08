@@ -4,24 +4,23 @@
 
     <DataTemplate x:Key="ContactItem">
         <Frame
-            
             Background="{StaticResource NSecondary}"
+            
             >
 
             <Grid ColumnDefinitions="1*,2*"
-                  Margin="{StaticResource MarginS}"
-                  Padding="{StaticResource MarginS}">
+                 Padding="{StaticResource MarginS}">
 
                 <Image Grid.Column="0"
-                       Source="{Binding Icon}"
-                       MinimumHeightRequest="50"
-                       MinimumWidthRequest="50"
-                       Aspect="AspectFit"/>
+                       Source="{Binding DisplayImage}"
+                       Aspect="AspectFit"
+                       HeightRequest="100"
+                       WidthRequest="100"
+                     />
 
                 <VerticalStackLayout Grid.Column="1">
 
                     <Label Text="{Binding Name}"
-                           Background="{StaticResource NPrimary}" 
                            FontSize="Medium"/>
 
                     <Label Text="{Binding Phone}" FontSize="Default"/>

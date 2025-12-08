@@ -3,21 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MauiApp4.ContactsPage"
              xmlns:vm="clr-namespace:MauiApp4.ViewModel"
-             Title="ContactsPage">
+             >
 
     <ContentPage.BindingContext>
         <vm:ContactsViewModel/>
     </ContentPage.BindingContext>
 
     <ScrollView>
-        <VerticalStackLayout
-            Spacing="{StaticResource MarginM}">
-            <Label Text="СПИСОК КОНТАКТОВ" FontFamily="Vokair"
-                   HorizontalOptions="Center"/>
+        <VerticalStackLayout Margin="{StaticResource MarginL}">
+
+            <Label Text="СПИСОК КОНТАКТОВ" FontFamily="Vokiar"
+                   HorizontalOptions="Center"
+                   FontSize="Header"/>
 
             <CollectionView ItemsSource="{Binding Contacts}"
                             ItemTemplate="{StaticResource ContactItem}"
-                            EmptyView="{StaticResource EmptyContact}">
+                            EmptyView="{StaticResource EmptyContact}"
+                            SelectedItem="{Binding SelectedContact}">
                
             </CollectionView>
             
