@@ -28,8 +28,9 @@ namespace MauiApp4
 
         private static void RegisterPagesAndVM(IServiceCollection service)
         {
+            service.AddSingleton<HttpClient>();
             service.AddTransient<ContactsPage>();
-            service.AddTransient<IApiService, ApiService>();
+            service.AddSingleton<IApiService, ApiService>();
             service.AddTransient<ContactsViewModel>();
         }
     }

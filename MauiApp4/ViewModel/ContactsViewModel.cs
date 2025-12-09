@@ -1,13 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MauiApp4.DTO;
-using MauiApp4.Model;
 using MauiApp4.Services;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MauiApp4.ViewModel
@@ -19,75 +16,242 @@ namespace MauiApp4.ViewModel
 
         [ObservableProperty]
         private ObservableCollection<ContactDto> _contacts = new ObservableCollection<ContactDto>();
+
         [ObservableProperty]
         private ContactDto _selectedContact;
+
         [ObservableProperty]
         private string _searchText;
+
         [ObservableProperty]
-        private bool _isRefreshing;
-        [ObservableProperty]
-        private bool _isModalVisible;
-        [ObservableProperty]
-        private ContactDto _editingContact;
-        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsNotBusy))]
         private bool _isBusy;
 
+        [ObservableProperty]
+        private bool _isRefreshing;
 
-        public ContactsViewModel(IApiService apiserv)
+        [ObservableProperty]
+        private bool _isModalVisible;
+
+        [ObservableProperty]
+        private ContactDto _editingContact;
+
+        public bool IsNotBusy => !IsBusy;
+
+        public ContactsViewModel(IApiService apiService)
         {
-            _apiService = apiserv;
+            _apiService = apiService;
+            _ = LoadContacts(); 
         }
 
-        public ContactsViewModel() { }
+        public ContactsViewModel()
+        {
+            if (Microsoft.Maui.Controls.DesignMode.IsDesignModeEnabled)
+            {
+                Contacts.Add(new ContactDto
+                {
+                    Id = 1,
+                    FirstName = "Иван",
+                    LastName = "Иванов",
+                    Phone = "+79991234567",
+                    Email = "ivan@example.com",
+                    Address = "Москва"
+                });
+                Contacts.Add(new ContactDto
+                {
+                    Id = 2,
+                    FirstName = "Петр",
+                    LastName = "Петров",
+                    Phone = "+79998765432",
+                    Email = "petr@example.com",
+                    Address = "Санкт-Петербург"
+                });
+            }
+        }
 
+        [RelayCommand]
         private async Task LoadContacts()
         {
             try
             {
                 IsBusy = true;
-                // var contacts = ; извлеките данные через сервис API
+                var contacts = await _apiService.GetContactsAsync(SearchText);
 
                 Contacts.Clear();
-                //добавьте загруженные контакты в Contacts
+                foreach (var contact in contacts)
+                {
+                    Contacts.Add(contact);
+                }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Ошибка",
-                    $"ошибка загрузки данных {ex.Message}", "OK");
+                await Shell.Current.DisplayAlert("Ошибка",
+                    $"Ошибка загрузки данных: {ex.Message}", "OK");
             }
             finally
             {
                 IsBusy = false;
             }
         }
+
         [RelayCommand]
         private void AddContact()
         {
-            //реализуйте функционал добавления нового контакта через модальное окно
+            EditingContact = new ContactDto();
+            IsModalVisible = true;
         }
+
         [RelayCommand]
         private void EditContact(ContactDto contact)
         {
-            //реализуйте функционал одновления контакта
+            if (contact == null) return;
+
+            EditingContact = new ContactDto
+            {
+                Id = contact.Id,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName,
+                Phone = contact.Phone,
+                Email = contact.Email,
+                Address = contact.Address
+            };
+            IsModalVisible = true;
         }
+
         [RelayCommand]
-        private void DeleteContact(ContactDto contact)
+        private async Task DeleteContact(ContactDto contact)
         {
-            //реализуйте удаление выбранного контакта. можно через кнопку в collectionview Или пойти более сложным путем и реализовать удаление свайпом. тут понадобиться отслеживать события ввода и работа с Behaviuours
+            if (contact == null) return;
+
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Удаление контакта",
+                $"Вы уверены, что хотите удалить контакт {contact.FullName}?",
+                "Да", "Нет");
+
+            if (confirm)
+            {
+                try
+                {
+                    IsBusy = true;
+                    await _apiService.DeleteContactAsync(contact.Id);
+
+                    Contacts.Remove(contact);
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Ошибка",
+                        $"Ошибка удаления контакта: {ex.Message}", "OK");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
         }
+
+        [RelayCommand]
+        private async Task SaveContact()
+        {
+            if (EditingContact == null) return;
+
+            try
+            {
+                IsBusy = true;
+
+                if (string.IsNullOrWhiteSpace(EditingContact.FirstName))
+                {
+                    await Shell.Current.DisplayAlert("Ошибка", "Введите имя", "OK");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(EditingContact.LastName))
+                {
+                    await Shell.Current.DisplayAlert("Ошибка", "Введите фамилию", "OK");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(EditingContact.Phone))
+                {
+                    await Shell.Current.DisplayAlert("Ошибка", "Введите телефон", "OK");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(EditingContact.Email))
+                {
+                    await Shell.Current.DisplayAlert("Ошибка", "Введите email", "OK");
+                    return;
+                }
+
+                if (EditingContact.Id == 0) 
+                {
+                    var createDto = new CreateContactDto
+                    {
+                        FirstName = EditingContact.FirstName,
+                        LastName = EditingContact.LastName,
+                        Phone = EditingContact.Phone,
+                        Email = EditingContact.Email,
+                        Address = EditingContact.Address
+                    };
+
+                    var newContact = await _apiService.CreateContactAsync(createDto);
+
+                    Contacts.Add(newContact);
+                }
+                else 
+                {
+                    var updateDto = new UpdateContactDto
+                    {
+                        FirstName = EditingContact.FirstName,
+                        LastName = EditingContact.LastName,
+                        Phone = EditingContact.Phone,
+                        Email = EditingContact.Email,
+                        Address = EditingContact.Address
+                    };
+
+                    await _apiService.UpdateContactAsync(EditingContact.Id, updateDto);
+
+                    var existingContact = Contacts.FirstOrDefault(c => c.Id == EditingContact.Id);
+                    if (existingContact != null)
+                    {
+                        existingContact.FirstName = EditingContact.FirstName;
+                        existingContact.LastName = EditingContact.LastName;
+                        existingContact.Phone = EditingContact.Phone;
+                        existingContact.Email = EditingContact.Email;
+                        existingContact.Address = EditingContact.Address;
+                    }
+                }
+
+                CloseModal();
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Ошибка",
+                    $"Ошибка сохранения контакта: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         [RelayCommand]
         private async Task RefreshContacts()
         {
-            IsRefreshing = true;
-            var contacts = await _apiService.GetContactsAsync(SearchText);
-
-            //одновление основного списка контактов на основе полученного из сервиса
-            //не забудьте про обработку исключений
+            try
+            {
+                IsRefreshing = true;
+                await LoadContacts();
+            }
+            finally
+            {
+                IsRefreshing = false;
+            }
         }
-        
-        private void SearchContact()
+
+        [RelayCommand]
+        private async Task SearchContact()
         {
-            //реализуйте поиск контакта / контактов по строке поиска
+            await LoadContacts();
         }
 
         [RelayCommand]
@@ -97,5 +261,9 @@ namespace MauiApp4.ViewModel
             EditingContact = null;
         }
 
+        partial void OnSearchTextChanged(string value)
+        {
+
+        }
     }
 }

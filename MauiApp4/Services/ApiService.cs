@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MauiApp4.Services
 {
-    internal class ApiService : IApiService
+    public class ApiService : IApiService
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl = "https://localhost:7190/api/Contacts"; //-----  проверьте свои адреса API

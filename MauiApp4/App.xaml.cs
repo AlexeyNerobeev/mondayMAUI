@@ -1,4 +1,6 @@
-﻿namespace MauiApp4
+﻿using System.Globalization;
+
+namespace MauiApp4
 {
     public partial class App : Application
     {

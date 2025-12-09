@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MauiApp4.Services
 {
-    internal interface IApiService
+    public interface IApiService
     {
         Task<List<ContactDto>> GetContactsAsync(string search = null);
         Task<ContactDto> GetContactAsync(int id);
